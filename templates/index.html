@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+{% block content %}
+{% if total %}
+  <h1 class="navbar-brand" style="padding-top:5vw;">Total results: {{total}}</h1>
+  <div class="table100" style="padding-top:1vw;position:relative">
+{% else %}
+  <div class="table100" style="padding-top:6vw;position:relative">
+{% endif %}
+            <table>
+              <thead>
+                <tr class="table100-head">
+                  <th class="column1">phone FB</th>
+                  <th class="column1">facebook UID</th>
+                  <th class="column1">first name FB</th>
+                  <th class="column1">last name FB</th>
+                  <th class="column1">gender FB</th>
+                  <th class="column1">city FB</th>
+                  <th class="column1">country FB</th>
+                  <th class="column1">city birth FB</th>
+                  <th class="column1">country birth FB</th>
+                  <th class="column1">status FB</th>
+                  <th class="column1">company FB</th>
+                  <th class="column1">last publication FB</th>
+                  <th class="column1">other FB1</th>
+                  <th class="column1">other FB2</th>
+                  <th class="column1">mail FB</th>
+                  <th class="column1">hbd FB</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for person in data %}
+                  <tr>
+                    {% if person['\ufeffphone_FB'] %}
+                      <td class="column1">{{person['\ufeffphone_FB']}}</td>
+                    {% else %}
+                      <td class="column1">{{person['phone_FB']}}</td>  
+                    {% endif %}
+                    <td class="column1">{{person['facebook_UID']}}</td>
+                    <td class="column1">{{person['first_name_FB']}}</td>
+                    <td class="column1">{{person['last_name_FB']}}</td>
+                    <td class="column1">{{person['gender_FB']}}</td>
+                    <td class="column1">{{person['city_FB']}}</td>
+                    <td class="column1">{{person['country_FB']}}</td>
+                    <td class="column1">{{person['city_birth_FB']}}</td>
+                    <td class="column1">{{person['country_birth_FB']}}</td>
+                    <td class="column1">{{person['status_FB']}}</td>
+                    <td class="column1">{{person['company_FB']}}</td>
+                    <td class="column1">{{person['last_publication_FB']}}</td>
+                    <td class="column1">{{person['other_FB1']}}</td>
+                    <td class="column1">{{person['other_FB2']}}</td>
+                    <td class="column1">{{person['mail_FB']}}</td>
+                    <td class="column1">{{person['hbd_FB']}}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <br><br><br>
+            </div>
+            {% if result %}
+            <div style="padding-left:34vw;padding-top:30px;" >
+              <button class="btn btn-danger" style="width:10vw"
+              onclick="window.location = '{{url_for('export' , data=data)}}'" >
+                    Export results
+                </button>
+            </div>
+            {% endif %}
+{% endblock content %}

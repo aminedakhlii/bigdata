@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="icon" href="../static/icon.png">
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="../static/css/main.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/util.css">
+
+    {% if title %}
+        <title>BigData - {{ title }}</title>
+    {% else %}
+        <title>BigData</title>
+    {% endif %}
+</head>
+<body style="background-color: #f2d4bc">
+    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top" style="background-color: #dc5379;" >
+        <div class="container" style="background-color:  #dc5379;">
+          <a class="navbar-brand " style="font-family: Futura, Trebuchet MS, Arial, sans-serif; font-size: 33px; font-style: normal; font-variant: normal; font-weight: 700; line-height: 16.4px;  letter-spacing: 1px; color: white ;" href="/">Home</a>
+              <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <form class="form-inline" action=" {{ url_for('search' , attribute=search , v=options) }}" id="searchForm">
+                <select class="form-select" form="searchForm" name="options" id ="options">
+                  <option value="phone_FB">phone FB</option>
+                  <option value="facebook_UID">facebook UID</option>
+                  <option value="first_name_FB">first name FB</option>
+                  <option value="last_name_FB">last name FB</option>
+                  <option value="gender_FB">gender FB</option>
+                  <option value="city_FB">city FB</option>
+                  <option value="country_FB">country FB</option>
+                  <option value="city_birth_FB">city birth FB</option>
+                  <option value="country_birth_FB">country birth FB</option>
+                  <option value="status_FB">status FB</option>
+                  <option value="company_FB">company FB</option>
+                  <option value="last_publication_FB">last publication FB</option>
+                  <option value="other_FB1">other FB1</option>
+                  <option value="other_FB2">other FB2</option>
+                  <option value="mail_FB">mail FB</option>
+                  <option value="hbd_FB">hbd FB</option>
+                </select>
+                  <input class="form-control ml-sm-4 mr-sm-3 md-sm-4" name="search" type="search" placeholder="Search" aria-label="Search">
+                  <button class="btn btn-info my-0 my-sm-0" type="submit">Search</button>
+              </form>
+            </div>
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('searchForm') }}">Search form</a>
+              <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('upload') }}">Import</a>
+              <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('addColumn') }}">Add Column</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+     <main role="main" class="container" style="background-color: #f2d4bc">
+      <div class="row" style="">
+        <div class="col-md-8" style="">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+                       {% block content %}{% endblock %}
+          </div>
+        </div>
+    </main>
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script type="text/JavaScript" src="{{ url_for('static' , filename='rating.js')}}"></script>
+
+
+
+
+ <style type="text/css">
+  .rating {
+  position: relative;
+  top: 0;
+  left: 120px;
+  right: 0px;
+  bottom: 0;
+  width: 250px;
+  height: 30px;
+  padding: 5px 10px;
+  margin: auto;
+  border-radius: 30px;
+  background: #FFF;
+  display: block;
+  overflow: hidden;
+
+
+
+  unicode-bidi: bidi-override;
+  direction: rtl;
+}
+.rating:not(:checked) > input {
+  display: none;
+}
+
+/* - - - - - RATE */
+#rate {
+  top: -65px;
+}
+#rate:not(:checked) > label {
+  cursor:pointer;
+  float: right;
+  width: 30px;
+  height: 30px;
+  display: block;
+
+  color: rgba(0, 135, 211, .4);
+  line-height: 33px;
+  text-align: center;
+}
+#rate:not(:checked) > label:hover,
+#rate:not(:checked) > label:hover ~ label {
+  color: rgba(0, 135, 211, .6);
+}
+#rate > input:checked + label:hover,
+#rate > input:checked + label:hover ~ label,
+#rate > input:checked ~ label:hover,
+#rate > input:checked ~ label:hover ~ label,
+#rate > label:hover ~ input:checked ~ label {
+  color: rgba(0, 135, 211, .8);
+}
+#rate > input:checked ~ label {
+  color: rgb(0, 135, 211);
+}
+/* - - - - - LIKE */
+#like {
+  bottom: -65px;
+}
+#like:not(:checked) > label {
+  cursor:pointer;
+  float: right;
+  width: 30px;
+  height: 30px;
+  display: block;
+
+  color: rgba(233, 54, 40, .4);
+  line-height: 33px;
+  text-align: center;
+}
+#like:not(:checked) > label:hover,
+#like:not(:checked) > label:hover ~ label {
+  color: rgba(233, 54, 40, .6);
+}
+#like > input:checked + label:hover,
+#like > input:checked + label:hover ~ label,
+#like > input:checked ~ label:hover,
+#like > input:checked ~ label:hover ~ label,
+#like > label:hover ~ input:checked ~ label {
+  color: rgba(233, 54, 40, .8);
+}
+#like > input:checked ~ label {
+  color: rgb(233, 54, 40);
+}
+</style>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block content %}
+<br><br><br><br>
+<div class="col-md-4" style="">
+<h1 class="navbar-brand"> Upload CSV </h1>
+<form id="uploadForm" action = "http://localhost:5000/upload" method = "POST"
+         enctype = "multipart/form-data">
+         <input type = "file" name = "file" style="padding:10px"/>
+         <div>
+           <h2 class="navbar-brand">Index</h2>
+         </div>
+         <select class="form-select" form="uploadForm" name="indexChoice" id ="indexChoice">
+           {% for index in indices %}
+            <option value="{{index}}">{{index}}</option>
+           {% endfor %}
+           <option value="other">other</option>
+         </select>
+         <div>
+           <h3 class="navbar-brand" style="padding-top:10px">if other</h3>
+         </div>
+         <div style="padding-top:10px">
+           <input class="form-control" name="index" id="index" />
+         </div>
+         <div style="padding-top:25px" >
+           <input class="btn btn-danger" type = "submit" />
+         </div>
+</form>
+</div>
+{% endblock content %}
