@@ -182,6 +182,7 @@ def searchData(body,must=True,index='all'):
 
 def getInitialData(size,index='all'):
     hits = []
+    res = ''
     body = {
         "from" : 0, "size": size,
         "query": {
