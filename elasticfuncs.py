@@ -180,17 +180,34 @@ def searchData(body,must=True,index='all'):
 
 
 
-def getInitialData(size):
-    res = es.search(index="fbdata", body={
+def getInitialData(size,index):
+    hits = []
+    body = {
         "from" : 0, "size": size,
         "query": {
             "match_all": {}
         }
-    })
+    }
+    indicies = getIndices()
+    if index == 'all':
+        for i in indicies:
+            res = ''
+            try:
+                res = es.search(index=i, body=query)
+            except:
+                continue
+            total +=  res['hits']['total']['value']
+            for hit in res['hits']['hits']:
+                hits.append(hit["_source"])
+    else:
+        print(index)
+        res = es.search(index=index, body=query)
+        print(res['hits'])
+        total += res['hits']['total']['value']
+        for hit in res['hits']['hits']:
+            hits.append(hit["_source"])
+
     print("Got %d Hits:" % res['hits']['total']['value'])
-    hits = []
-    for hit in res['hits']['hits']:
-        hits.append(hit["_source"])
     return hits
 
 def export(data):
