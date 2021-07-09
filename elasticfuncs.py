@@ -192,23 +192,19 @@ def getInitialData(size,index='all'):
     indicies = getIndices()
     if index == 'all':
         for i in indicies:
-            res = ''
             try:
-                res = es.search(index=i, body=query)
-            except:
+                res = es.search(index=i, body=body)
+            except Exception as e:
+                print(e)
                 continue
-            total +=  res['hits']['total']['value']
             for hit in res['hits']['hits']:
                 hits.append(hit["_source"])
     else:
-        print(index)
-        res = es.search(index=index, body=query)
+        res = es.search(index=index, body=body)
         print(res['hits'])
-        total += res['hits']['total']['value']
         for hit in res['hits']['hits']:
             hits.append(hit["_source"])
 
-    print("Got %d Hits:" % res['hits']['total']['value'])
     return hits
 
 def export(data):
