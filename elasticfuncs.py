@@ -180,7 +180,7 @@ def searchData(body,must=True,index='all'):
 
 
 
-def getInitialData(size,index):
+def getInitialData(size,index='all'):
     hits = []
     body = {
         "from" : 0, "size": size,
