@@ -3,7 +3,7 @@
 <br><br><br><br>
 <div class="col-md-4" style="">
 <h1 class="navbar-brand"> Upload CSV </h1>
-<form id="uploadForm" action = "http://localhost:5000/upload" method = "POST"
+<form id="uploadForm" action = "{{url_for('upload')}}" method = "POST"
          enctype = "multipart/form-data">
          <input type = "file" name = "file" style="padding:10px"/>
          <div>
