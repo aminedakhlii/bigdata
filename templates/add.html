@@ -2,10 +2,12 @@
 {% block content %}
 <br><br><br>
 <h1 class="navbar-brand"> Add Column </h1>
-<form id="addForm" action = "http://localhost:5000/upload" method = "POST"
+<form id="addForm" action = "{{url_for('addColumn')}}" method = "POST"
          enctype = "multipart/form-data">
          <div style="padding-top:10px">
-           <input class="form-control" name="index" id="index" />
-         </div>
+           <input class="form-control" name="name" id="name" />
+           <div style="padding-top: 20px;">
+            <input type="submit" class="btn btn-danger"/>
+           </div>
 </form>
 {% endblock content %}

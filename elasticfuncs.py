@@ -1,5 +1,7 @@
 from elasticsearch import Elasticsearch, helpers
 import csv,sys,math,json
+from server import db
+from models import Fields
 
 ALLOWED_EXTENSIONS = {'txt', 'csv'}
 csv.field_size_limit(sys.maxsize)
@@ -9,6 +11,10 @@ es = Elasticsearch(host = "localhost", port = 9200)
 def getIndices():
     tmp = es.indices.get_alias("*")
     return [i for i in tmp if i[0] != '.']
+
+def getFields():
+    fields = Fields.query.all()
+    return [f.name for f in fields]    
 
 def stdFields():
     ret = []
@@ -45,7 +51,7 @@ def importCSV(filePath,index):
     with open('tmp.csv','r') as fp:
         rdr = csv.DictReader(fp)
         for row in rdr:
-            pass"""
+            pass"""   
         helpers.bulk(es, reader, index=index)
     with open(filePath) as f:
         exists = checkExistant(reader=csv.DictReader(f),index=index)
@@ -54,10 +60,23 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
 def addField(name):
-    pass
+    try:
+        f = Fields(name=name)
+        db.session.add(f)
+        db.session.commit()
+        return True
+    except: 
+        return False
 
+def modifyField(old,new):
+    try:
+        f = Fields.query.get_or_404(name=old)
+        f.name = new
+        db.session.commit()
+        return True
+    except:
+        return False
 
 def checkExistant(reader,index='all'):
     found = False
@@ -187,7 +206,10 @@ def getInitialData(size,index='all'):
         "from" : 0, "size": size,
         "query": {
             "match_all": {}
-        }
+        },
+        "collapse": {
+                "field": "facebook_UID.keyword"
+              }
     }
     indicies = getIndices()
     if index == 'all':
@@ -205,7 +227,7 @@ def getInitialData(size,index='all'):
         for hit in res['hits']['hits']:
             hits.append(hit["_source"])
 
-    return hits
+    return [i for n, i in enumerate(hits) if i not in hits[n + 1:]]
 
 def export(data):
     try:
