@@ -1,13 +1,32 @@
 {% extends "layout.html" %}
 {% block content %}
 <br><br><br>
+<h1 class="navbar-brand"> Modify Column </h1>
+<form id="modifyForm" action = "{{url_for('settings', modify=True)}}" method = "POST"
+         enctype = "multipart/form-data">
+         <div style="padding-top:5px">
+           <div class="" style="padding-bottom:10px">
+             <select class="form-select" form="modifyForm" name="field" id ="field" >
+               {% for field in allowedFields %}
+                  <option value="{{field}}">{{field}}</option>
+               {% endfor %}
+             </select>
+           </div>
+           <input class="form-control" name="new" id="new" />
+           <div style="padding-top: 20px;">
+            <input type="submit" class="btn btn-danger" value="Modify"/>
+           </div>
+        </div>
+</form>
+<br>
 <h1 class="navbar-brand"> Add Column </h1>
-<form id="addForm" action = "{{url_for('addColumn')}}" method = "POST"
+<form id="addForm" action = "{{url_for('settings')}}" method = "POST"
          enctype = "multipart/form-data">
          <div style="padding-top:10px">
            <input class="form-control" name="name" id="name" />
            <div style="padding-top: 20px;">
-            <input type="submit" class="btn btn-danger"/>
+            <input type="submit" class="btn btn-danger" value="Add"/>
            </div>
+        </div>
 </form>
 {% endblock content %}

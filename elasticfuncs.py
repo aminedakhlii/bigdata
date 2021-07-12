@@ -2,6 +2,7 @@ from elasticsearch import Elasticsearch, helpers
 import csv,sys,math,json
 from server import db
 from models import Fields
+import time
 
 ALLOWED_EXTENSIONS = {'txt', 'csv'}
 csv.field_size_limit(sys.maxsize)
@@ -14,7 +15,7 @@ def getIndices():
 
 def getFields():
     fields = Fields.query.all()
-    return [f.name for f in fields]    
+    return [f.name for f in fields]
 
 def stdFields():
     ret = []
@@ -28,6 +29,8 @@ def importCSV(filePath,index):
         reader = csv.DictReader(f)
         #writer = csv.writer(open('tmp.csv','w'),delimiter=',')
         fields = reader.fieldnames
+        if index not in getIndices():
+            es.indices.create(index=index)
         """"notExistant = []
         header = []
         for row in reader:
@@ -51,8 +54,10 @@ def importCSV(filePath,index):
     with open('tmp.csv','r') as fp:
         rdr = csv.DictReader(fp)
         for row in rdr:
-            pass"""   
-        helpers.bulk(es, reader, index=index)
+            pass"""
+        for success, info in helpers.parallel_bulk(es, actions=reader, index=index, chunk_size=10000, thread_count=16):
+            if not success:
+                print('A document failed:', info)
     with open(filePath) as f:
         exists = checkExistant(reader=csv.DictReader(f),index=index)
 
@@ -66,12 +71,13 @@ def addField(name):
         db.session.add(f)
         db.session.commit()
         return True
-    except: 
+    except:
         return False
 
 def modifyField(old,new):
     try:
-        f = Fields.query.get_or_404(name=old)
+        f = Fields.query.filter_by(name=old).first()
+        print(f)
         f.name = new
         db.session.commit()
         return True
@@ -137,13 +143,10 @@ def replaceExistant(old,new):
             "lang": "painless"
           },
     }
-    print(query)
     if changes != '':
         for i in getIndices():
             es.indices.refresh(index = i)
             try:
-                print(i)
-                print(query)
                 p = es.update_by_query(index=i,body=query)
             except Exception as e:
                 print(e)
@@ -159,9 +162,6 @@ def searchData(body,must=True,index='all'):
                     "must": body
                 },
             },
-            "collapse": {
-                "field": "facebook_UID.keyword"
-              }
         }
     else:
         query = {
@@ -171,6 +171,7 @@ def searchData(body,must=True,index='all'):
                 },
             },
         }
+    print(query)
     hits = []
     try:
         total = 0
@@ -186,12 +187,11 @@ def searchData(body,must=True,index='all'):
                 for hit in res['hits']['hits']:
                     hits.append(hit["_source"])
         else:
-            print(index)
             res = es.search(index=index,size=10000, body=query)
-            print(res['hits'])
             total += res['hits']['total']['value']
             for hit in res['hits']['hits']:
                 hits.append(hit["_source"])
+        hits = [i for n, i in enumerate(hits) if i not in hits[n + 1:]]
         return total, hits
     except Exception as e:
         print(e)
@@ -223,7 +223,6 @@ def getInitialData(size,index='all'):
                 hits.append(hit["_source"])
     else:
         res = es.search(index=index, body=body)
-        print(res['hits'])
         for hit in res['hits']['hits']:
             hits.append(hit["_source"])
 

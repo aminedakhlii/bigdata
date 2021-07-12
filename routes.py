@@ -4,7 +4,7 @@ import elasticfuncs
 from wtforms import StringField
 from forms import SearchForm
 from werkzeug.utils import secure_filename
-import os
+import os, time
 
 UPLOAD_FOLDER = app.root_path + app.static_url_path + '/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -12,11 +12,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/')
 def home():
     data = elasticfuncs.getInitialData(15)
-    print(data)
     return render_template('index.html',data=data,fields=elasticfuncs.getFields())
 
 @app.route('/upload', methods=['POST','GET'])
 def upload():
+    start_time = time.time()
     indices = elasticfuncs.getIndices()
     if request.method == 'POST':
         index = ''
@@ -35,6 +35,7 @@ def upload():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             elasticfuncs.importCSV(UPLOAD_FOLDER + '/' + filename,index)
+            print("--- %s seconds ---" % (time.time() - start_time))
             return redirect(url_for('home'))
     return render_template('upload.html',indices=indices)
 
@@ -46,14 +47,22 @@ def export():
         return send_file(app.root_path + '/exported.csv', as_attachment=True)
     return redirect(url_for('home'))
 
-@app.route('/addColumn' , methods=['GET','POST'])
-def addColumn():
+@app.route('/settings' , methods=['GET','POST'])
+def settings(modify=True):
+    allowedFields = elasticfuncs.getFields()
+    allowedFields = [f for f in allowedFields if f is not 'facebook_UID']
     if request.method == 'POST':
-        print(request.form)
-        name = request.form.get('name')
-        if elasticfuncs.addField(name):
-            return redirect(url_for('home'))
-    return render_template('add.html')
+        if modify:
+            print(request.form)
+            old = request.form.get('field')
+            new = request.form.get('new')
+            if elasticfuncs.modifyField(old,new):
+                return redirect(url_for('home'))
+        else:
+            name = request.form.get('name')
+            if elasticfuncs.addField(name):
+                return redirect(url_for('home'))
+    return render_template('add.html',allowedFields=allowedFields)
 
 @app.route('/search')
 def search():
@@ -64,7 +73,7 @@ def search():
 def searchForm():
     form = SearchForm()
     for f in elasticfuncs.getFields():
-       form.f = StringField(f)
+       setattr(SearchForm,f,StringField(f))
     if form.validate_on_submit():
         body = []
         for field in form:
@@ -73,7 +82,6 @@ def searchForm():
                 choices = choices.split(",")
                 print(choices)
                 body.append({ 'terms' : { field.name : choices }})
-        print(body)
         total, data = elasticfuncs.searchData(body,index=form.index.data)
         return render_template('index.html',data=data,result=True,total=total,fields=elasticfuncs.getFields())
     #data = elasticfuncs.searchData(request.args.get('options'),request.args.get('search'))

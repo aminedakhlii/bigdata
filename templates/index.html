@@ -10,7 +10,7 @@
               <thead>
                 <tr class="table100-head">
                   {% for f in fields[:-1] %}
-                    <th class="column1">{{f}}</th>
+                    <th onclick="" class="column1">{{f}}</th>
                   {% endfor %}
                   <th class="column2">{{fields[fields|length-1]}}</th>
                 </tr>
@@ -21,7 +21,7 @@
                     {% if person['\ufeffphone_FB'] %}
                       <td class="column1">{{person['\ufeffphone_FB']}}</td>
                     {% else %}
-                      <td class="column1">{{person['phone_FB']}}</td>  
+                      <td class="column1">{{person['phone_FB']}}</td>
                     {% endif %}
                     {% for f in fields[1:-1] %}
                       <td class="column1">{{person[f]}}</td>
