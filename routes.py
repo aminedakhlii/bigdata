@@ -12,6 +12,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/')
 def home():
     data = elasticfuncs.getInitialData(15)
+    print(elasticfuncs.getFields())
     return render_template('index.html',data=data,fields=elasticfuncs.getFields())
 
 @app.route('/upload', methods=['POST','GET'])
@@ -21,9 +22,9 @@ def upload():
     if request.method == 'POST':
         index = ''
         if request.form.get('indexChoice') != 'other':
-            index = request.form.get('indexChoice')
+            index = request.form.get('indexChoice').lower()
         else:
-            index = request.form.get('index')
+            index = request.form.get('index').lower()
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
@@ -34,7 +35,7 @@ def upload():
         if file and elasticfuncs.allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            elasticfuncs.importCSV(UPLOAD_FOLDER + '/' + filename,index)
+            elasticfuncs.upload(app.root_path,UPLOAD_FOLDER + '/' + filename,index)
             print("--- %s seconds ---" % (time.time() - start_time))
             return redirect(url_for('home'))
     return render_template('upload.html',indices=indices)
@@ -50,7 +51,7 @@ def export():
 @app.route('/settings' , methods=['GET','POST'])
 def settings(modify=True):
     allowedFields = elasticfuncs.getFields()
-    allowedFields = [f for f in allowedFields if f is not 'facebook_UID']
+    allowedFields = [f for f in allowedFields if f != 'facebook_UID']
     if request.method == 'POST':
         if modify:
             print(request.form)

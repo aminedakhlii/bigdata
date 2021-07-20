@@ -2,9 +2,10 @@ from elasticsearch import Elasticsearch, helpers
 import csv,sys,math,json
 from server import db
 from models import Fields
-import time
+import time,os
+import bulk as bk
 
-ALLOWED_EXTENSIONS = {'txt', 'csv'}
+ALLOWED_EXTENSIONS = {'csv'}
 csv.field_size_limit(sys.maxsize)
 
 es = Elasticsearch(host = "localhost", port = 9200)
@@ -24,8 +25,14 @@ def stdFields():
         ret.append(k)
     return ret
 
+def upload(rootPath,filePath,index):
+    os.system('bash' + rootPath + ' split.sh ' + filePath)
+    bk.ingest(index)
+    with open(filePath) as f:
+        exists = checkExistant(reader=csv.DictReader(f),index=index)
+
 def importCSV(filePath,index):
-    with open(filePath, encoding="utf8") as f:
+    with open(filePath, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         #writer = csv.writer(open('tmp.csv','w'),delimiter=',')
         fields = reader.fieldnames
@@ -55,7 +62,9 @@ def importCSV(filePath,index):
         rdr = csv.DictReader(fp)
         for row in rdr:
             pass"""
-        for success, info in helpers.parallel_bulk(es, actions=reader, index=index, chunk_size=10000, thread_count=16):
+        #helpers.bulk(es, actions=reader, index=index)       
+        for success, info in helpers.parallel_bulk(es, actions=reader, index=index, chunk_size=170, 
+        thread_count=20, request_timeout=100, queue_size=20):
             if not success:
                 print('A document failed:', info)
     with open(filePath) as f:
@@ -171,7 +180,6 @@ def searchData(body,must=True,index='all'):
                 },
             },
         }
-    print(query)
     hits = []
     try:
         total = 0
@@ -195,7 +203,7 @@ def searchData(body,must=True,index='all'):
         return total, hits
     except Exception as e:
         print(e)
-        return []
+        return 0, []
 
 
 
@@ -207,9 +215,6 @@ def getInitialData(size,index='all'):
         "query": {
             "match_all": {}
         },
-        "collapse": {
-                "field": "facebook_UID.keyword"
-              }
     }
     indicies = getIndices()
     if index == 'all':
