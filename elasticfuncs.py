@@ -53,12 +53,13 @@ def convertFields():
     fmap = []
     f = FieldsMap.query.all()
     for field in f:
-        fmap.append({field.new : field.old})
+        fmap.append({field.new : field.old})    
     return fmap
 
 def setPriorities(plist):
     for p in plist:
         for k,v in p.items():
+            print(k)
             f = FieldsMap.query.filter_by(old=k).first()
             f.priority = v
             db.session.commit()

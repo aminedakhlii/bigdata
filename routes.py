@@ -154,11 +154,11 @@ def keys():
 @app.route('/seckeys', methods=['POST','GET'])
 def seckeys():
     checked = elasticfuncs.getSecKeys()
-    fields = elasticfuncs.getFieldsForView()
+    fields = [c['field'] for c in elasticfuncs.getFieldsForView()]
     if request.method == 'POST':
         choices = request.form.getlist('chosen')
         elasticfuncs.setSecKeys(choices)
-        redirect(url_for('settings'))
+        return redirect(url_for('settings'))
     return render_template('keys.html',fields=fields,checked=checked)   
 
 @app.route('/priority', methods=['POST','GET'])
@@ -168,11 +168,12 @@ def priority():
         fmap = elasticfuncs.convertFields()
         priorityList = []
         for f in fs:
-            p = request.form.get(f['field'])
+            p = request.form.get(f['old'])
             if p == '':
                 p = 0
             else:
                 p = int(p)  
-            priorityList.append({fmap[fs.index(f)][f['field']]:p})    
-        elasticfuncs.setPriorities(priorityList)      
+            priorityList.append({f['old']:p})    
+        elasticfuncs.setPriorities(priorityList)  
+        return redirect(url_for('settings'))    
     return render_template('priority.html',fields=elasticfuncs.getFieldsForView())    
