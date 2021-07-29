@@ -42,6 +42,7 @@ def getFieldsForView():
     fields = FieldsMap.query.all()
     for f in fields[:]:
         fields[fields.index(f)] = {'field' : f.new, 'old': f.old, 'priority': f.priority}
+    print(fields)    
     return list(sorted(fields, key = lambda i: i['priority'], reverse=True))
     #return [f.new for f in fields]
 
@@ -185,7 +186,7 @@ def allowed_file(filename):
 def addField(name):
     try:
         f = Fields(name=name)
-        fmap = FieldsMap(old=name,new=name)
+        fmap = FieldsMap(old=name,new=name,priority=0)
         db.session.add(f)
         db.session.add(fmap)
         db.session.commit()
