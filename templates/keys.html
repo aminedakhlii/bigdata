@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block content %}
+<form method="POST" action="" id="keysForm">
+    {% for f in fields %}
+    <div style="display: block;">
+        <label for="" style="">{{f}}</label>
+        {% if f in checked %}    
+        <input type="checkbox" id="chosen" name="chosen" value="{{f}}" style="display: inline-block;" checked>
+        {% else %}
+        <input type="checkbox" id="chosen" name="chosen" value="{{f}}" style="display: inline-block;">
+        {% endif %}
+    </div>    
+    {% endfor %}
+    <input type="submit" value="Submit" class="btn btn-success">
+</form>
+{% endblock content %}

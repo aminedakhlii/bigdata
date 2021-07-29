@@ -1,6 +1,5 @@
 {% extends "layout.html" %}
 {% block content %}
-<br><br><br>
 <h1 class="navbar-brand"> Modify Column </h1>
 <form id="modifyForm" action = "{{url_for('settings', modify=True)}}" method = "POST"
          enctype = "multipart/form-data">
@@ -29,4 +28,25 @@
            </div>
         </div>
 </form>
+<br>
+<h1 class="navbar-brand"> Delete index </h1>
+<form id="deleteForm" action = "{{url_for('settings',delete=True)}}" method = "POST"
+         enctype = "multipart/form-data" onsubmit="return confirm('Do you really want to delete this index?');">
+         <div style="padding-top:10px">
+          <div class="" style="padding-bottom:10px">
+            <select class="form-select" form="deleteForm" name="index" id ="index" >
+              {% for i in indices %}
+                 <option value="{{i}}">{{i}}</option>
+              {% endfor %}
+            </select>
+          </div>
+           <div style="padding-top: 20px;">
+            <input type="submit" class="btn btn-danger" value="Delete" />
+           </div>
+        </div>
+</form>
+<br>
+<button class="btn btn-danger" onclick="window.location = '{{url_for('seckeys')}}'">Modify contact keys</button>
+<button class="btn btn-danger" onclick="window.location = '{{url_for('priority')}}'">Modify Columns Ranking</button>
+<br><br><br>
 {% endblock content %}

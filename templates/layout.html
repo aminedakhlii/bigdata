@@ -32,22 +32,9 @@
             <div class="navbar-nav mr-auto">
               <form class="form-inline" action=" {{ url_for('search' , attribute=search , v=options) }}" id="searchForm">
                 <select class="form-select" form="searchForm" name="options" id ="options">
-                  <option value="phone_FB">phone FB</option>
-                  <option value="facebook_UID">facebook UID</option>
-                  <option value="first_name_FB">first name FB</option>
-                  <option value="last_name_FB">last name FB</option>
-                  <option value="gender_FB">gender FB</option>
-                  <option value="city_FB">city FB</option>
-                  <option value="country_FB">country FB</option>
-                  <option value="city_birth_FB">city birth FB</option>
-                  <option value="country_birth_FB">country birth FB</option>
-                  <option value="status_FB">status FB</option>
-                  <option value="company_FB">company FB</option>
-                  <option value="last_publication_FB">last publication FB</option>
-                  <option value="other_FB1">other FB1</option>
-                  <option value="other_FB2">other FB2</option>
-                  <option value="mail_FB">mail FB</option>
-                  <option value="hbd_FB">hbd FB</option>
+                  {% for h in headers %}
+                     <option value="{{h}}">{{h}}</option>
+                  {% endfor %}
                 </select>
                   <input class="form-control ml-sm-4 mr-sm-3 md-sm-4" name="search" type="search" placeholder="Search" aria-label="Search">
                   <button class="btn btn-info my-0 my-sm-0" type="submit">Search</button>
@@ -57,6 +44,7 @@
             <div class="navbar-nav">
               <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('searchForm') }}">Search form</a>
               <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('upload') }}">Import</a>
+              <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('status') }}">Status</a>
               <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('settings') }}">Settings</a>
             </div>
           </div>
@@ -65,7 +53,7 @@
     </header>
      <main role="main" class="container" style="background-color: #f2d4bc">
       <div class="row" style="">
-        <div class="col-md-8" style="">
+        <div class="col-md-5" style="">
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
               {% for category, message in messages %}
@@ -75,7 +63,9 @@
               {% endfor %}
             {% endif %}
           {% endwith %}
+          <br><br><br>
                        {% block content %}{% endblock %}
+                       <br>
           </div>
         </div>
     </main>

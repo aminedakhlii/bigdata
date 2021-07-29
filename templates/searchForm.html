@@ -1,31 +1,39 @@
 {% extends "layout.html" %}
 {% block content %}
-<br><br><br>
 <div class="content-section" style=" color:white;">
-        <form method="POST" action="">
-            {{ form.hidden_tag() }}
-            <fieldset class="form-group">
-                {% for field in form %}
-                {% if field.name != 'submit' and field.name != 'csrf_token' %}
-                <div class="form-group">
-                    {{ field.label(class="form-control-label" , style="color:grey") }}
-                    {% if field.errors %}
-                        {{ field(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in field.errors %}
-                                <span>{{ error }}</span>
+        <form method="POST" action="" id="searchFormFields">
+           <div id="fields">
+               <div id="index" class="form-select form-select-lg">
+                <select class="form-select" form="searchFormFields" name="index" id ="index">
+                    {% for i in indices + ['all'] %}
+                        <option value="{{i}}" >{{i}}</option>
+                    {% endfor %}
+                </select>
+               </div>
+                <div id="element">
+                    <div style="display: inline-block;">
+                        <select class="form-select" form="searchFormFields" name="options" id ="options">
+                            {% for h in headers %}
+                                <option value="{{h}}">{{h}}</option>
                             {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ field(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                {% endif %}
-                {% endfor %}
-            </fieldset>
-            <div class="form-group">
-                {{ form.submit(class="btn btn-outline-info") }}
-            </div>
+                        </select>
+                    </div>
+                    <div style="display: inline-block;width: 15vw;" >
+                        <input class="form-control" type="text" name="choice" id="choice">
+                    </div>
+                    <div style="display:inline-block;padding-left:1vw;" id="next">
+                            <button type="button" class="btn btn-info" onclick="
+                                var original = document.getElementById('element');
+                                var clone = original.cloneNode(true);
+                                clone.removeAttribute(id);
+                                document.getElementById('fields').appendChild(clone);
+                            ">And</button>
+                    </div>
+                    <br><br>  
+                </div>  
+            </div> 
+        <input type="submit" class="btn btn-success" value="Submit" style="display: inline-block;">
         </form>
     </div>
+    <br>
 {% endblock content %}

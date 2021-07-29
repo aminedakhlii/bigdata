@@ -1,44 +1,53 @@
 {% extends "layout.html" %}
 {% block content %}
 {% if total %}
-  <h1 class="navbar-brand" style="padding-top:5vw;">Total results: {{total}}</h1>
+  <h1 class="navbar-brand" style="padding-top:0vw;">Total results: {{total}}</h1>
+  {% if result %}
+  <div style="padding-left:2vw;display:inline-block;" >
+    <form action="{{url_for('export')}}"  id="exp" method="POST">
+      {% for d in data %}
+        <input type="text" name="data" id="" value="{{d}}" style="display: none;">
+      {% endfor %}
+      <button type="submit" form="exp" class="btn btn-info" style="width:10vw">Export</button>
+    </form>
+  </div>
+{% endif %}  
   <div class="table100" style="padding-top:1vw;position:relative">
 {% else %}
-  <div class="table100" style="padding-top:6vw;position:relative">
+  <div class="table100" style="padding-top:0vw;position:relative">
 {% endif %}
             <table>
               <thead>
+                <form action="{{url_for('partialShow')}}"  id="part" method="POST">
                 <tr class="table100-head">
-                  {% for f in fields[:-1] %}
-                    <th onclick="" class="column1">{{f}}</th>
+                  <input type="text" name="element", id="element" style="display: none;">
+                  {% for d in data %}
+                   <input type="text" name="data" id="data" value="{{d}}" style="display: none;">
                   {% endfor %}
-                  <th class="column2">{{fields[fields|length-1]}}</th>
+                  {% for f in fields[:-1] %}
+                    <th class="column1" style="cursor: pointer;" onclick="
+                    document.getElementById('element').value = '{{f['old']}}';
+                    document.getElementById('part').submit();
+                    ">{{f['field']}}</th>                  
+                  {% endfor %}
+                  <th class="column2" style="cursor: pointer;" onclick="
+                    document.getElementById('element').value = '{{fields[fields|length-1]['old']}}';
+                    document.getElementById('part').submit();
+                  ">{{fields[fields|length-1]['field']}}</th>
                 </tr>
+              </form>
               </thead>
               <tbody>
-                {% for person in data %}
+                {% for person in data[:1000] %}
                   <tr>
-                    {% if person['\ufeffphone_FB'] %}
-                      <td class="column1">{{person['\ufeffphone_FB']}}</td>
-                    {% else %}
-                      <td class="column1">{{person['phone_FB']}}</td>
-                    {% endif %}
-                    {% for f in fields[1:-1] %}
-                      <td class="column1">{{person[f]}}</td>
+                    {% for f in fields[:-1] %}
+                      <td class="column1">{{person[f['old']]}}</td>
                     {% endfor %}
-                    <td class="column6">{{person[fields[fields|length-1]]}}</td>
+                    <td class="column6">{{person[fields[fields|length-1]['old']]}}</td>
                   </tr>
                 {% endfor %}
               </tbody>
             </table>
             <br><br><br>
             </div>
-            {% if result %}
-            <div style="padding-left:34vw;padding-top:30px;" >
-              <button class="btn btn-danger" style="width:10vw"
-              onclick="window.location = '{{url_for('export' , data=data)}}'" >
-                    Export results
-                </button>
-            </div>
-            {% endif %}
 {% endblock content %}

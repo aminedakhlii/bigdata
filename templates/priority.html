@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1 class="display2"> Ranking: </h1>
+<br>
+<form method="POST" action="" id="priority">
+    {% for f in fields %}
+    <div style="display: block;">
+        <label for="" style="padding-right: 5vw;width: 20vw;">{{f['field']}}</label>    
+        <input type="number" id="pr" name="{{f['field']}}" min="1" max="5" style="display: inline-block;">
+    </div>    
+    {% endfor %}
+    <br>
+    <input type="submit" value="Submit" class="btn btn-success">
+</form>
+{% endblock content %}
