@@ -1,10 +1,14 @@
-import elasticfuncs as ef
 from iteration_utilities import unique_everseen
-from multiprocessing import Pool, Manager
+from billiard import Pool, Manager
 import threading, math, os
+import global_ as g
 
-es = ef.es 
+es = g.es 
 manager = Manager()
+
+def getIndices(): 
+    tmp = es.indices.get_alias("*")
+    return [i for i in tmp if i[0] != '.']
 
 def search(index,body):
     hits = []
@@ -71,7 +75,7 @@ def globalSearch(body,size=1000):
     hitsFromSlice = manager.list()
     if body == 'FETCH':
         body = buildFetchQuery()
-    indices = ef.getIndices()
+    indices = getIndices()
     t = 0
     h = []
     for i in indices:

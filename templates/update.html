@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="col-md-4" style="">
+    <h1 class="navbar-brand"> Update index </h1>
+    <form id="updateForm" action = "{{url_for('manualUpdate')}}" method = "POST"
+             enctype = "multipart/form-data">
+             <select class="form-select" form="updateForm" name="index" id ="index">
+               {% for index in indices %}
+                <option value="{{index}}">{{index}}</option>
+               {% endfor %}
+             </select>
+             <div style="padding-top:25px" >
+               <input class="btn btn-success" type = "submit" value="Update"/>
+             </div>
+    </form>
+    <br>
+    <button class="btn btn-danger" onclick="window.location = '{{ url_for('stopUpdates')}}'">Stop Updates</button>
+    </div>
+{% endblock content %}

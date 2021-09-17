@@ -14,7 +14,7 @@
                     <div style="display: inline-block;">
                         <select class="form-select" form="searchFormFields" name="options" id ="options">
                             {% for h in headers %}
-                                <option value="{{h}}">{{h}}</option>
+                                <option value="{{h['old']}}">{{h['field']}}</option>
                             {% endfor %}
                         </select>
                     </div>

@@ -26,7 +26,7 @@ def removeEmpty(element,data):
     global data_
     for d in data[:]:
         if d[element] in ['','None',None,' ']:
-            data.remove(d)  
+            data.remove(d)                    
     data_.extend(data)
 
 def replaceExistant(old,new,indices,es,sk,index=None):

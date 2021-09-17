@@ -9,11 +9,15 @@
            <h2 class="navbar-brand">Index</h2>
          </div>
          <select class="form-select" form="uploadForm" name="indexChoice" id ="indexChoice">
+          <option value="other">other</option>
            {% for index in indices %}
             <option value="{{index}}">{{index}}</option>
            {% endfor %}
-           <option value="other">other</option>
          </select>
+         <div style="padding-top:15px">
+          <label for="">Update</label>
+          <input type="checkbox" id="update" name="update" value="update" style="display: inline-block;">
+         </div>
          <div>
            <h3 class="navbar-brand" style="padding-top:10px">if other</h3>
          </div>

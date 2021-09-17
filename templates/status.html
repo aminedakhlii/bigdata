@@ -5,11 +5,7 @@
 {% for s in status %}
 <li>
 <li class="navbar-brand" style="padding-top:1.5vw;">{{ (s.keys()) | first }}: {{ s['total'] }}</h1>
-{% if (s.values()) | first == True  %}
-<h1 class="navbar-brand" style="display: inline-block;">Done</h1>
-{% else %}
-<h1 class="navbar-brand" style="display: inline-block;">Updating..</h1>
-{% endif%}
+<h1 class="navbar-brand" style="display: inline-block;">{{(s.values()) | first}}..</h1>
 </li>
 <br>
 {% endfor %}

@@ -16,7 +16,7 @@ data = []
 
 @app.context_processor
 def headers():
-    return dict(headers = elasticfuncs.getFields())
+    return dict(headers = [f for f in elasticfuncs.getFieldsForView()])
 
 @app.route('/')
 def home():
@@ -37,6 +37,10 @@ def partialShow():
     element = request.form.get('element')
     #data = [ast.literal_eval(d) for d in data]
     fmap = elasticfuncs.convertFields()
+    """elems = []
+    for k,v in fmap.items():
+        if v==element:
+            elems.append(k)"""
     data = u.updatePartial(data,element)
     total = len(data)        
     viewSample = data[:100]        
@@ -60,10 +64,15 @@ def upload():
             flash('No selected file')
             return redirect(request.url)
         if file and elasticfuncs.allowed_file(file.filename):
+            update = request.form.get('update')
+            if update != None:
+                update = True
+            else:
+                update = False    
             index = index.replace(" ","")
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            elasticfuncs.upload(app.root_path,UPLOAD_FOLDER + '/' + filename,index)
+            elasticfuncs.upload(app.root_path,UPLOAD_FOLDER + '/' + filename,index,update)
             print("--- %s seconds ---" % (time.time() - start_time))
             return redirect(url_for('home'))
     return render_template('upload.html',indices=indices)
@@ -85,8 +94,9 @@ def status():
 
 @app.route('/settings' , methods=['GET','POST'])
 def settings():
-    allowedFields = elasticfuncs.getFields()
-    allowedFields = [f for f in allowedFields if f != 'facebook_UID']
+    allowedFields = elasticfuncs.getFieldsForView()
+    allowedFields = [f['field'] for f in allowedFields if f != 'facebook_UID']
+    deleteColumn = request.args.get('delete_column')
     delete = request.args.get('delete')
     modify = request.args.get('modify')
     if request.method == 'POST':
@@ -97,8 +107,15 @@ def settings():
                 return redirect(url_for('home'))
         elif delete:
             target = request.form.get('index')
+            print(target)
             elasticfuncs.deleteIndex(target)
-            return redirect(url_for('home'))       
+            return redirect(url_for('home'))
+        elif deleteColumn:
+            field = request.form.get('field_d')
+            if elasticfuncs.deleteField(field):
+                return redirect(url_for('settings'))
+            else:
+                return redirect(url_for('home'))            
         else:
             name = request.form.get('name')
             if elasticfuncs.addField(name):
@@ -115,8 +132,11 @@ def search():
     else:
         key = request.args.get('options')     
     body = {'term': {key:request.args.get('search').lower()}}
-    total, data = s.indexSearch('all', body=body)
-    return render_template('index.html',fmap=fmap,data=data,result=True,total=total,fields=elasticfuncs.getFieldsForView(),elements=[])
+    print(body)
+    total, data = s.indexSearch(body=body,index='all')
+    viewSample = data[:100]    
+    return render_template('index.html',fmap=fmap,data=viewSample,result=True,total=total,
+    fields=elasticfuncs.getFieldsForView(),elements=[])
 
 @app.route('/searchForm', methods=['POST','GET'])
 def searchForm():
@@ -141,6 +161,19 @@ def searchForm():
         total=total,fields=elasticfuncs.getFieldsForView(),elements=[])
     #data = elasticfuncs.searchData(request.args.get('options'),request.args.get('search'))
     return render_template('searchForm.html',indices=elasticfuncs.getIndices())
+
+@app.route('/manualUpdate', methods=['POST','GET'])
+def manualUpdate():
+    if request.method == 'POST':
+        index = request.form.get('index').lower()
+        elasticfuncs.checkIndex.apply_async((index,None))
+        return redirect(url_for('home'))
+    return render_template('update.html',indices=elasticfuncs.getIndices())
+
+@app.route('/stopUpdates', methods=['POST','GET'])
+def stopUpdates():
+    os.system('pkill celery')
+    return redirect(url_for('manualUpdate'))
 
 @app.route('/keys', methods=['POST','GET'])
 def keys():

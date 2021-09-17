@@ -33,7 +33,7 @@
               <form class="form-inline" action=" {{ url_for('search' , attribute=search , v=options) }}" id="searchForm">
                 <select class="form-select" form="searchForm" name="options" id ="options">
                   {% for h in headers %}
-                     <option value="{{h}}">{{h}}</option>
+                     <option value="{{h['old']}}">{{h['field']}}</option>
                   {% endfor %}
                 </select>
                   <input class="form-control ml-sm-4 mr-sm-3 md-sm-4" name="search" type="search" placeholder="Search" aria-label="Search">
@@ -45,6 +45,7 @@
               <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('searchForm') }}">Search form</a>
               <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('upload') }}">Import</a>
               <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('status') }}">Status</a>
+              <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('manualUpdate') }}">Update</a>
               <a class="nav-item nav-link" style="color: white ;"href="{{ url_for('settings') }}">Settings</a>
             </div>
           </div>

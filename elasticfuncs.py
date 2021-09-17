@@ -1,23 +1,28 @@
 from elasticsearch import Elasticsearch, helpers
 import csv,sys,math,json
+import pandas as pd
 from server import db
-from models import Fields, FieldsMap, Keys, Tasks
+from models import Fields, FieldsMap, Keys, Tasks, LastField
 import time,os, random, subprocess
 import bulk as bk
 from multiprocessing import Pool, Manager
 import sort as st
 from datetime import datetime
-from celery import task, current_app
+from celery import task, current_app, group
 from celery.signals import task_success
 from celery.result import AsyncResult
+from celery.task.control import revoke
 from server import celery
 import update as u
+import global_ as g
+import search as s
 
 ALLOWED_EXTENSIONS = {'csv'}
 csv.field_size_limit(sys.maxsize)
 
-es = Elasticsearch(host = "localhost", port = 9200, timeout=30)
+es = g.es
 manager = Manager()
+result_ = ''
 
 """def getIndices():
     tmp = es.indices.get_alias("*")
@@ -41,8 +46,13 @@ def getIndexDate(index):
 def getFieldsForView():
     fields = FieldsMap.query.all()
     for f in fields[:]:
-        fields[fields.index(f)] = {'field' : f.new, 'old': f.old, 'priority': f.priority}
-    print(fields)    
+        fields[fields.index(f)] = {'field' : f.new, 'old': f.old, 'priority': f.priority} 
+    """for f in fields:
+        for h in [x for x in fields if x != f]:
+            if h['field'] == f['field']:
+                f['old'].extend(h['old'])
+                fields.remove(h)"""
+
     return list(sorted(fields, key = lambda i: i['priority'], reverse=True))
     #return [f.new for f in fields]
 
@@ -51,10 +61,10 @@ def getFields():
     return [f.name for f in fields]
 
 def convertFields():
-    fmap = []
+    fmap = {}
     f = FieldsMap.query.all()
     for field in f:
-        fmap.append({field.new : field.old})    
+        fmap[field.old] = field.new    
     return fmap
 
 def setPriorities(plist):
@@ -104,14 +114,67 @@ def stdFields():
 
 def deleteIndex(index):
     es.indices.delete(index=index, ignore=[404,400])
+    """count = Tasks.query.filter_by(index=index).count()
+    for i in range(count):
+        revoke(index+str(i), terminate=True)"""
     while Tasks.query.filter_by(index=index).first():
         Tasks.query.filter_by(index=index).delete()
+        db.session.commit()
 
 
 def checkFile(path,index):
     with open(path,encoding="utf-8-sig") as f:
         exists = checkExistant(reader=csv.DictReader(f),index=index)
         return exists
+
+def addTask(index,number,lines):
+    Tasks.query.filter_by(index=index,number=number).delete()
+    db.session.commit()
+    stat = Tasks(index=index,number=number,lines=lines)
+    db.session.add(stat)
+    db.session.commit()
+
+@task
+def checkIndex(index,lines):
+    if lines == None:
+        lines = es.cat.count(index, params={"format": "json"})
+        lines = lines[0]['count']
+    addTask(index,0,lines)    
+    if getIndices() == [] or getIndices() == [index]:
+        print('aborting') 
+        t = Tasks.query.filter_by(index=index).first()
+        t.number = 1 
+        db.session.commit() 
+        return True
+    es.indices.refresh(index=index)
+    total, index_data = s.indexListAll(index)
+    print(total)
+    nproc = os.cpu_count() - 1
+    chunk = math.ceil(len(index_data)/nproc)
+    last = math.floor(len(index_data)/nproc)
+    job = []
+    for i in range(nproc):
+        res = ''
+        if i == nproc - 1:
+            res = updatePart.s(index,index_data[i*chunk:])
+        else:
+            res = updatePart.s(index,index_data[i*chunk:i*chunk + chunk])    
+        job.append(res) 
+    g = group(job)
+    result = g()
+    while not result.successful():
+        continue
+    print(result.successful())
+    t = Tasks.query.filter_by(index=index).first()
+    t.number = 1 
+    db.session.commit()    
+    return True
+
+@task
+def updatePart(index,index_data):
+    print('part')
+    exists = checkExistant(reader=index_data,index=index)
+    return True
 
 @task()
 def updateAll(dir,f,index):
@@ -128,14 +191,19 @@ def getStatus():
     db.session.commit()
     status = []
     for i in getIndices():
-        s = {i:True}
+        s = {i:'PENDING'}
         for j in tasks:
             if j.index == i:
                 s['total'] = j.lines
-                if celery.AsyncResult(i+str(j.number)).state != 'SUCCESS':
+                if j.number == 0:
+                    s[i] = 'PENDING'
+                elif j.number == 1:
+                    s[i] = 'SUCCESS'    
+                """if celery.AsyncResult(i+str(j.number)).state != 'SUCCESS':
                     s[i] = False
-                    break
-        status.append(s)
+                    break"""
+        if s[i] != True:
+            status.append(s)
 
     return status
 
@@ -145,39 +213,64 @@ def getCpus(files):
     else:
          return files    
     
-def upload(rootPath,filePath,index):
+def upload(rootPath,filePath,index,update):
     try:
         os.system('rm ' + rootPath + '/chunks/*')
     except:
         pass
     chunkSize = 0   
-    lines = 0 
+    lines = 0
     try:
+        #checkHeader(filePath)
         lines = int(subprocess.getoutput('wc -l ' + filePath).split(' ')[0])
         if lines < 1000000:
             chunkSize = 50000
         else:     
-            chunkSize = math.ceil(lines / os.cpu_count() - 1)
+            chunkSize = math.ceil(lines / (os.cpu_count() - 1))
         if chunkSize < 50000:
             chunkSize = 50000    
     except Exception as e:
         print(e)
         chunkSize = 100000
     os.system('bash ' + rootPath + '/split.sh ' + filePath + ' ' + str(chunkSize))
-    #st.split(filePath)
     print('ingesting...')
-    bk.ingest(index)
-    dir = rootPath+'/chunks/'
-    files = os.listdir(dir)
-    print('updating...')
-    for f in files:
+    bk.ingest(index,getIndices())
+    """dir = rootPath+'/chunks/'
+    files = os.listdir(dir)"""
+    if update:
+        print('updating...')
+        result = checkIndex.apply_async((index,lines))
+    """for f in files:
         stat = Tasks(index=index,number=files.index(f),lines=lines)
         db.session.add(stat)
         db.session.commit()
         #checkFile(dir+f,index)
-        result = updateAll.apply_async((dir,f,index), task_id=index + str(files.index(f)))
+        result = updateAll.apply_async((dir,f,index), task_id=index + str(files.index(f)))"""
     return
     
+def checkHeader(file):
+    last = LastField.query.order_by(-LastField.id).first()
+    with open(file, "r", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        headers = reader.fieldnames
+    found = False    
+    for h in headers: 
+        if h in getFields():
+            found = True
+    print(found)        
+    if not found:
+        headerList = [last.last + i for i in range(len(headers))]
+        for h in headerList:
+            addField(str(h))
+        last.last = len(headers)
+        db.session.commit()
+        headerList = ','.join(str(e) for e in headerList)
+        cmd = 'sed -i 1i' + '"'+ headerList +'"' + ' ' + file
+        print(cmd)
+        try:
+            os.system(cmd)
+        except:
+            pass    
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -194,6 +287,19 @@ def addField(name):
     except:
         return False
 
+def deleteField(f):
+    try:
+        #this has to be changed to new after modification of getFields
+        targetInMap = FieldsMap.query.filter_by(new=f).first()
+        Fields.query.filter_by(name=targetInMap.old).delete()
+        FieldsMap.query.filter_by(new=f).delete()
+        Keys.query.filter_by(key=f).delete()
+        db.session.commit()
+        return True
+    except Exception as e:
+        print(e)
+        return False          
+
 def modifyField(old,new):
     try:
         f = FieldsMap.query.filter_by(new=old).first()
@@ -204,9 +310,6 @@ def modifyField(old,new):
         return False
 
 def checkExistant(reader,index='all'):
-    if getIndices() == [] or getIndices() == [index]:
-        print('aborting') 
-        return False
     try:
         for row in reader:
             must = []
@@ -217,7 +320,6 @@ def checkExistant(reader,index='all'):
                 elif r in getSecKeys(): 
                     should.append({'term' : {r:row[r].lower()}})
             try:
-                print(should)        
                 ilist = [i for i in getIndices() if i != index]    
                 indices, total, data = searchData(must=must,should=should,indexList=ilist)
                 if len(data) > len([]) and len(indices) > len([]) and indices != [index]:

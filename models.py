@@ -20,3 +20,7 @@ class Tasks(db.Model):
     index = db.Column(db.String(100), nullable=False)  
     number = db.Column(db.Integer,nullable=False) 
     lines = db.Column(db.Integer)
+
+class LastField(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    last =  db.Column(db.Integer,nullable=False)    
