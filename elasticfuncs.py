@@ -6,7 +6,6 @@ from models import Fields, FieldsMap, Keys, Tasks, LastField
 import time,os, random, subprocess
 import bulk as bk
 from multiprocessing import Pool, Manager
-import sort as st
 from datetime import datetime
 from celery import task, current_app, group
 from celery.signals import task_success
